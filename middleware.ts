@@ -17,28 +17,49 @@ export async function middleware(req: NextRequest) {
   // console.log("req.url:", req.url);
   let maintenance = 0;
 
-  if (!isApiLocalhost()) {
-    const res = await fetch(
-      // `${process.env.NEXT_PUBLIC_BASE_URL}/api/common-settings`,
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/maintenance-mode`,
-      {
-        method: "get",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Origin: "*",
-          userapisecret: `${process.env.NEXT_PUBLIC_SECRET_KEY}`,
-        },
-      }
-    );
-    const data = await res.json();
-    // console.log("data: ", data);
+  // Skip middleware if required environment variables are not set
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  const secretKey = process.env.NEXT_PUBLIC_SECRET_KEY;
+  
+  if (!baseUrl || !secretKey) {
+    console.warn("Middleware: Missing environment variables, skipping maintenance check");
+    return NextResponse.next();
+  }
 
-    if (data?.data) {
-      maintenance = parseInt(data?.data?.maintenance_mode_status);
-    } else {
-      maintenance = parseInt(data?.maintenance_mode_status);
+  try {
+    if (!isApiLocalhost()) {
+      const res = await fetch(
+        // `${process.env.NEXT_PUBLIC_BASE_URL}/api/common-settings`,
+        `${baseUrl}/api/maintenance-mode`,
+        {
+          method: "get",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Origin: "*",
+            userapisecret: secretKey,
+          },
+        }
+      );
+      
+      if (!res.ok) {
+        console.warn("Middleware: Failed to fetch maintenance mode status");
+        return NextResponse.next();
+      }
+      
+      const data = await res.json();
+      // console.log("data: ", data);
+
+      if (data?.data) {
+        maintenance = parseInt(data?.data?.maintenance_mode_status);
+      } else {
+        maintenance = parseInt(data?.maintenance_mode_status);
+      }
     }
+  } catch (error) {
+    console.error("Middleware error:", error);
+    // Continue with normal flow if maintenance check fails
+    return NextResponse.next();
   }
 
   // console.log("req.nextUrl.pathname:", req.nextUrl.pathname);
@@ -48,6 +69,8 @@ export async function middleware(req: NextRequest) {
   if (maintenance == STATUS_ACTIVE) {
     return NextResponse.redirect(new URL("/maintenance", req.url));
   }
+  
+  return NextResponse.next();
 }
 
 export const config = {
