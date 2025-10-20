@@ -124,45 +124,67 @@ const Home: NextPage = ({
   );
 };
 export const getServerSideProps: GetServerSideProps = async (ctx: any) => {
-  const { data: CommonLanding } = await CommonLandingCustomSettings(ctx.locale);
-  const cookies = parseCookies(ctx);
-  return {
-    props: {
-      customPageData: CommonLanding?.custom_page_settings
-        ? CommonLanding?.custom_page_settings
-        : null,
-      socialData: CommonLanding?.landing_settings?.media_list
-        ? CommonLanding?.landing_settings?.media_list
-        : null,
-      copyright_text: CommonLanding?.landing_settings?.copyright_text
-        ? CommonLanding?.landing_settings?.copyright_text
-        : "",
-      landing: CommonLanding?.landing_settings ?? null,
-      bannerListdata: CommonLanding?.landing_settings?.banner_list
-        ? CommonLanding?.landing_settings.banner_list
-        : null,
-      announcementListdata: CommonLanding?.landing_settings?.announcement_list
-        ? CommonLanding?.landing_settings?.announcement_list
-        : null,
-      featureListdata: CommonLanding?.landing_settings?.feature_list
-        ? CommonLanding?.landing_settings?.feature_list
-        : null,
-      asset_coin_pairs: CommonLanding?.landing_settings?.asset_coin_pairs
-        ? CommonLanding?.landing_settings?.asset_coin_pairs
-        : null,
-      hourly_coin_pairs: CommonLanding?.landing_settings?.hourly_coin_pairs
-        ? CommonLanding?.landing_settings?.hourly_coin_pairs
-        : null,
-      latest_coin_pairs: CommonLanding?.landing_settings?.latest_coin_pairs
-        ? CommonLanding?.landing_settings?.latest_coin_pairs
-        : null,
-      loggedin: cookies?.token ? true : false,
-      landing_banner_image: CommonLanding?.landing_settings
-        ?.landing_banner_image
-        ? CommonLanding?.landing_settings?.landing_banner_image
-        : null,
-      customSettings: CommonLanding?.common_settings ?? null,
-    },
-  };
+  try {
+    // Check if environment variables are configured
+    if (!process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL === "undefined") {
+      console.error("❌ Environment variables not configured");
+      return {
+        redirect: {
+          destination: "/maintenance",
+          permanent: false,
+        },
+      };
+    }
+
+    const { data: CommonLanding } = await CommonLandingCustomSettings(ctx.locale);
+    const cookies = parseCookies(ctx);
+    return {
+      props: {
+        customPageData: CommonLanding?.custom_page_settings
+          ? CommonLanding?.custom_page_settings
+          : null,
+        socialData: CommonLanding?.landing_settings?.media_list
+          ? CommonLanding?.landing_settings?.media_list
+          : null,
+        copyright_text: CommonLanding?.landing_settings?.copyright_text
+          ? CommonLanding?.landing_settings?.copyright_text
+          : "",
+        landing: CommonLanding?.landing_settings ?? null,
+        bannerListdata: CommonLanding?.landing_settings?.banner_list
+          ? CommonLanding?.landing_settings.banner_list
+          : null,
+        announcementListdata: CommonLanding?.landing_settings?.announcement_list
+          ? CommonLanding?.landing_settings?.announcement_list
+          : null,
+        featureListdata: CommonLanding?.landing_settings?.feature_list
+          ? CommonLanding?.landing_settings?.feature_list
+          : null,
+        asset_coin_pairs: CommonLanding?.landing_settings?.asset_coin_pairs
+          ? CommonLanding?.landing_settings?.asset_coin_pairs
+          : null,
+        hourly_coin_pairs: CommonLanding?.landing_settings?.hourly_coin_pairs
+          ? CommonLanding?.landing_settings?.hourly_coin_pairs
+          : null,
+        latest_coin_pairs: CommonLanding?.landing_settings?.latest_coin_pairs
+          ? CommonLanding?.landing_settings?.latest_coin_pairs
+          : null,
+        loggedin: cookies?.token ? true : false,
+        landing_banner_image: CommonLanding?.landing_settings
+          ?.landing_banner_image
+          ? CommonLanding?.landing_settings?.landing_banner_image
+          : null,
+        customSettings: CommonLanding?.common_settings ?? null,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching landing page data:", error);
+    // Redirect to maintenance page on error
+    return {
+      redirect: {
+        destination: "/maintenance",
+        permanent: false,
+      },
+    };
+  }
 };
 export default Home;

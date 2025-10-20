@@ -95,18 +95,58 @@ const Maintenance: React.FC<MaintenanceProps> = ({ data }) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async (ctx: any) => {
-  const { data } = await commomSettings();
-  if (parseInt(data?.maintenance_mode_status) == STATUS_INACTIVE && !isApiLocalhost()) {
+  try {
+    // If environment variables are not set, show setup message
+    if (!process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL === "undefined") {
+      return {
+        props: {
+          data: {
+            data: {
+              maintenance_mode_title: "⚙️ Configuration Required",
+              maintenance_mode_text: 
+                "This application needs to be configured. Please set up the required environment variables in Vercel:\n\n" +
+                "1. NEXT_PUBLIC_BASE_URL (Your backend API URL)\n" +
+                "2. NEXT_PUBLIC_SECRET_KEY (Your API secret)\n\n" +
+                "See VERCEL_SETUP.md in the repository for detailed instructions.\n\n" +
+                "Contact your administrator if you need help.",
+              maintenance_mode_status: "1",
+            }
+          },
+        },
+      };
+    }
+
+    const { data } = await commomSettings();
+    if (parseInt(data?.maintenance_mode_status) == STATUS_INACTIVE && !isApiLocalhost()) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
     return {
-      redirect: {
-        destination: "/",
-        permanent: false,
+      props: { data },
+    };
+  } catch (error) {
+    // Show error message if API call fails
+    return {
+      props: {
+        data: {
+          data: {
+            maintenance_mode_title: "⚠️ Setup Error",
+            maintenance_mode_text:
+              "Unable to connect to the backend API. Please verify:\n\n" +
+              "1. Environment variables are correctly set in Vercel\n" +
+              "2. Backend API is running and accessible\n" +
+              "3. NEXT_PUBLIC_BASE_URL points to the correct API endpoint\n\n" +
+              "Error: " + (error instanceof Error ? error.message : "Unknown error"),
+            maintenance_mode_status: "1",
+          }
+        },
       },
     };
   }
-  return {
-    props: { data },
-  };
 };
 
 export default Maintenance;
