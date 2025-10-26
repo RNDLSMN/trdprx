@@ -53,6 +53,8 @@ const Maintenance: React.FC<MaintenanceProps> = ({ data }) => {
   const maintenanceContentPStyle: React.CSSProperties = {
     fontSize: "20px",
     color: "var(--text-primary-color)!important",
+    whiteSpace: "pre-line",
+    lineHeight: "1.6",
   };
 
   return (
@@ -102,13 +104,16 @@ export const getServerSideProps: GetServerSideProps = async (ctx: any) => {
         props: {
           data: {
             data: {
-              maintenance_mode_title: "⚙️ Configuration Required",
+              maintenance_mode_title: "⚙️ Konfigurasi Diperlukan",
               maintenance_mode_text: 
-                "This application needs to be configured. Please set up the required environment variables in Vercel:\n\n" +
-                "1. NEXT_PUBLIC_BASE_URL (Your backend API URL)\n" +
-                "2. NEXT_PUBLIC_SECRET_KEY (Your API secret)\n\n" +
-                "See VERCEL_SETUP.md in the repository for detailed instructions.\n\n" +
-                "Contact your administrator if you need help.",
+                "Aplikasi ini memerlukan konfigurasi environment variables di Vercel.\n\n" +
+                "Silakan tambahkan variabel berikut di Vercel Dashboard:\n" +
+                "1. NEXT_PUBLIC_BASE_URL → URL backend API Anda\n" +
+                "2. NEXT_PUBLIC_SECRET_KEY → API secret key\n" +
+                "3. NEXT_PUBLIC_HOST_SOCKET → Host WebSocket\n" +
+                "4. NEXT_PUBLIC_WSS_PORT → Port WebSocket\n\n" +
+                "Lihat file ENV_SETUP.md atau VERCEL_SETUP.md untuk panduan lengkap.\n\n" +
+                "Hubungi administrator jika Anda memerlukan bantuan.",
               maintenance_mode_status: "1",
             }
           },
@@ -134,13 +139,20 @@ export const getServerSideProps: GetServerSideProps = async (ctx: any) => {
       props: {
         data: {
           data: {
-            maintenance_mode_title: "⚠️ Setup Error",
+            maintenance_mode_title: "🔧 Backend Sedang Dalam Proses Setup",
             maintenance_mode_text:
-              "Unable to connect to the backend API. Please verify:\n\n" +
-              "1. Environment variables are correctly set in Vercel\n" +
-              "2. Backend API is running and accessible\n" +
-              "3. NEXT_PUBLIC_BASE_URL points to the correct API endpoint\n\n" +
-              "Error: " + (error instanceof Error ? error.message : "Unknown error"),
+              "Backend API belum tersedia atau sedang dalam proses konfigurasi.\n\n" +
+              "Kemungkinan penyebab:\n" +
+              "1. Backend Laravel belum di-deploy ke server\n" +
+              "2. API endpoints belum tersedia di: " + (process.env.NEXT_PUBLIC_BASE_URL || "undefined") + "\n" +
+              "3. Database belum dikonfigurasi dengan benar\n" +
+              "4. Environment variables di Vercel perlu diperbarui\n\n" +
+              "Langkah yang perlu dilakukan:\n" +
+              "• Deploy backend Laravel ke hosting\n" +
+              "• Pastikan database MySQL sudah dikonfigurasi\n" +
+              "• Verifikasi API dapat diakses melalui browser\n" +
+              "• Update environment variables di Vercel jika perlu\n\n" +
+              "Silakan hubungi administrator untuk bantuan lebih lanjut.",
             maintenance_mode_status: "1",
           }
         },
